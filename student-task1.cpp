@@ -1,128 +1,49 @@
-// Student class is implemented based on string and do not need any change
-
+#include <fstream>
 #include <iostream>
 #include <string>
-#include <list>
+#include <regex>
 
 using namespace std;
 
-// ----------------------------- Base class
-
-class Person{
-	protected:
-		string name;
-	    
-	public:
-		void setname(char const *);
-		string getname();
-
-
-		Person(); 				// default constructor
-		Person(const char *);
-		Person(const Person &); 		// copy constructor
-
-		Person(const string &);
-
-		virtual ~Person();
-
-};
-
-void Person::setname(char const *n)
-{
-	name = n;
+int main(int argc, char** argv){
+    if(argc < 3){ // we need 3 arguments at least
+        cout << "You have not used the correct arguments" << endl;
+        cout << "try " << argv[0] << " \"filename.filetype\" \"search term\"" << endl << "To allow both upper case and lower case answers, you can add -nocaps to the end" << endl;
+    }
+    bool icase = false;
+    if(argc > 3){
+        for(int i = 0; i < argc; i++){
+            if(argv[i] == "-nocaps"){ // if we have nocaps, remove it and shift the rest to the left so the filename is still the first argument and the second is the search term
+                icase = true;
+                for(int q = i; q < argc; q++){
+                    argv[q-1] = argv[q];
+                }
+                i = argc;
+            }
+        }
+    }
+    ifstream fin;
+    fin.open(argv[1]); // open the fie
+    string fullstring = "";
+    while(!fin.eof()){
+        string get;
+        getline(fin,get); // get all the lines and concat them with \n
+        fullstring += get;
+        if(!fin.eof()){
+            fullstring += "\n";
+        }
+    }
+    regex houdini("[\\.\\\\\\+\\*\\?\\[\\^\\]\\$\\(\\)\\{\\}\\=\\!\\<\\>\\|\\:\\-]"); // this escapes all characters (houdini the escape artist)
+    string replaced = regex_replace(argv[2],houdini,"\\$0"); // add a \ before the special character to escape it
+    regex searchterm;
+    if(icase){
+        searchterm = regex(replaced,regex::ECMAScript|regex::icase); // add icase if it's supposed to ignore case
+    } else {
+        searchterm = regex(replaced); // if it doesn't ignore case it can keep the default flags
+    }
+    auto start = sregex_iterator(fullstring.begin(), fullstring.end(), searchterm); // search through the fill file
+    auto end = sregex_iterator();
+    cout << "There are \033[1m" << distance(start,end) << "\033[0m instances of \033[1m'" << argv[2] << "'\033[0m in this file" << endl; // count the instances
+    fin.close();
+    return 0;
 }
-
-string Person::getname()
-{
-	return name;
-}
-
-
-Person::Person()
-{
-	name = "";
-}
-
-Person::Person(char const *n)
-{
-	setname(n);
-}
-
-Person::Person(const string & n)
-{
-	name = n;
-}
-
-Person::~Person()
-{
-}
-
-Person::Person(const Person &t):name(t.name)
-{
-}
-
-// -----------------------------  Student class
-
-class Student : public Person{
-	private:
-		double grade;
-
-	public:
-      	
-      	void setgrade(double);
-      	double getgrade();
-
-      	Student();    // default constructor
-		Student(char const *, double);
-		Student(const Student &);  // copy constructor
-
-		~Student();
-
-	friend ostream & operator<<(ostream &, const Student &);
-
-};
-
-void Student::setgrade(double g)
-{
-	grade =g;
-}
-
-double Student::getgrade()
-{
-	return grade;
-}
-
-ostream & operator<<(ostream & out, const Student & s)
-{
-		out << s.name << "," << s.grade;
-		return out;
-
-}
-
-Student::Student(): grade(0)
-{
-}
-
-Student::Student(char const *n, double g): Person(n)
-{
-	setgrade(g);
-}
-
-Student::Student(const Student &t):Person(t.name)
-{
-	grade = t.grade;
-}
-
-Student::~Student()
-{
-}
-
-int main()
-{  
-
-	// Write your code for Task 1
-		
-}
-
-
-
